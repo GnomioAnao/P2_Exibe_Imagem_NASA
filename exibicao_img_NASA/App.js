@@ -9,7 +9,7 @@ export default function App() {
   const [fotos, setFotos] = useState([])
 
 const abrirLinkedIn1 = () => {
-  Linking.openURL('https://www.linkedin.com/in/caio-lima-da-cruz-338850337/')
+  Linking.openURL('https://www.linkedin.com/in/alicia-muniz-dev/')
 }
 
 const abrirLinkedIn2 = () => {
@@ -48,12 +48,12 @@ const buscarAno = async (ano) => {
         style={styles.input}
         value={busca}
         onChangeText={setBusca}
-        placeholder='Digite o que deseja buscar(exemplos: moon, earth etc)'
+        placeholder='Digite o que deseja buscar (exemplos: moon, earth etc)'
       />
 
 
       <Pressable style={styles.botao} onPress={buscar}>
-        <Text style={{ color: 'white' }}>Ao infinito, e além...</Text>
+        <Text style={{ color: '#11468F' }}>Ao infinito, e além...</Text>
       </Pressable>
 
       <View style={styles.containerAno}>
@@ -63,7 +63,7 @@ const buscarAno = async (ano) => {
             style={styles.botaoAno} 
             onPress={()=>buscarAno(ano)}
             >
-            <Text style={{ color: 'white' }}>{ano}</Text>
+            <Text style={{ color: '#11468F' }}>{ano}</Text>
           </Pressable>
         ))}
       </View>
@@ -96,24 +96,24 @@ const buscarAno = async (ano) => {
 
       <View style={styles.footer}>
         <Pressable onPress={abrirLinkedIn1}>
-          <FontAwesome5 name='user-astronaut' size={30} color='white'/>
+          <FontAwesome5 name='user-astronaut' size={30} color='#FFFCFB'/>
         </Pressable>
         <Pressable onPress={abrirLinkedIn2}>
-          <MaterialCommunityIcons name="space-invaders" size={30} color="white" />
+          <MaterialCommunityIcons name="space-invaders" size={30} color="#FFFCFB" />
         </Pressable>
         <Pressable onPress={abrirLinkedIn3}>
-          <FontAwesome6 name="space-awesome" size={30} color="white" />
+          <FontAwesome6 name="space-awesome" size={30} color="#FFFCFB" />
         </Pressable>
       </View>
     </View>
 
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0032a0',
+    backgroundColor: '#11468F',
     alignItems: 'center',
   },
 
@@ -125,13 +125,14 @@ const styles = StyleSheet.create({
   input: {
     marginTop: 50,
     width: '60%',
-    borderColor: '#e4002b',
-    borderWidth: 4,
+    borderColor: '#EB455F',
+    borderWidth: 2,
     marginBottom: 12,
     textAlign: 'center',
-    borderRadius: 20,
+    borderRadius: 15,
     padding: 12,
-    color: 'white',
+    color: '#2B3467',
+    backgroundColor: '#FFFCFB',
   },
 
   containerAno: {
@@ -140,19 +141,19 @@ const styles = StyleSheet.create({
 
   botao: {
     width: '60%',
-    backgroundColor: '#e4002b',
+    backgroundColor: '#FFFCFB',
     padding: 12,
     borderRadius: 12,
     alignItems: 'center',
-    borderRadius: 20,
-    borderColor: '#001b44',
-    borderWidth: 4,
+    borderRadius: 25,
+    borderColor: '#EB455F',
+    borderWidth: 2,
   },
 
   botaoAno: {
-    backgroundColor: '#001b44',
+    backgroundColor: '#FFFCFB',
     borderWidth: 2,
-    borderColor: '#e4002b',
+    borderColor: '#EB455F',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -164,9 +165,9 @@ const styles = StyleSheet.create({
   footer: {
     width: '100%',
     padding: 14,
-    backgroundColor: '#001b44',
+    backgroundColor: '#11468F',
     borderTopWidth: 2,
-    borderColor: '#e4002b',
+    borderColor: '#EB455F',
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 20,
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
 
   
   titulo: {
-    color: "white",
+    color: "#FFFCFB",
     marginTop: 10,
     fontSize: 16,
     width: 300,
