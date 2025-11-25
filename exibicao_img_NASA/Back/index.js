@@ -29,7 +29,7 @@ app.get('/search', async (req, res) => {
 
 
 app.get('/search-year', async (req, res) => {
-    const ano = req.query.ano;
+    const ano = req.query.ano
 
     if (!ano) {
         return res.status(400).json({ erro: "O parâmetro 'ano' é obrigatório" })
@@ -64,6 +64,23 @@ app.get('/apod', async (req, res) => {
     })
     
     res.json(result.data)
+})
+
+
+app.get('/apod-3', async (req, res) => {
+    const nasa = axios.create({
+      baseURL: 'https://api.nasa.gov/planetary/'
+    })
+
+    const result = await nasa.get('/apod', {
+      params: {
+        api_key: process.env.NASA_KEY,
+        count: 3       
+      }
+    });
+
+    res.json(result.data)
+  
 })
 
 
