@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { FontAwesome6, FontAwesome5 } from '@expo/vector-icons'
-import { useEffect, useState} from 'react'
+import { useEffect, useState } from 'react'
 import { StyleSheet, Text, View, FlatList, Pressable, TextInput, Linking, Image, ScrollView } from 'react-native'
 
 export default function App() {
@@ -8,6 +8,7 @@ export default function App() {
   const [busca, setBusca] = useState('')
   const [fotos, setFotos] = useState([])
   const [fotosDia, setFotosDia] = useState([])
+  const [limiteResultados] = useState(10)
 
   const abrirLinkedIn1 = () => {
     Linking.openURL('https://www.linkedin.com/in/alicia-muniz-dev/')
@@ -27,7 +28,7 @@ export default function App() {
     const dados = await resposta.json()
 
     const resultados = dados.items || []
-    setFotos(resultados)
+    setFotos(resultados.slice(0, limiteResultados))
   }
 
   const buscarAno = async (ano) => {
@@ -35,75 +36,114 @@ export default function App() {
     const dados = await resposta.json()
 
     const resultados = dados.items || []
-    setFotos(resultados)
+    setFotos(resultados.slice(0, limiteResultados))
   }
+
 
   const buscarFotoDoDia = async () => {
-  try {
-    const resposta = await fetch('http://localhost:3000/apod')
-    const dados = await resposta.json()
+    try {
+      const resposta = await fetch('http://localhost:3000/apod')
+      const dados = await resposta.json()
 
-    if (dados.media_type !== "image") {
-      alert("A foto de hoje é um vídeo, não uma imagem.")
-      return;
+      if (dados.media_type !== "image") return null
+
+      const novaFoto = {
+        url: dados.url,
+        title: dados.title,
+        date: dados.date,
+        explanation: dados.explanation
+      }
+
+      return novaFoto
+    } catch (err) {
+      console.error("Erro ao buscar foto do dia:", err)
+      return null
+    }
+  }
+
+  const formatarDataBR = (dataISO) => {
+    const [ano, mes, dia] = dataISO.split('-')
+    return `${dia}/${mes}/${ano}`
+  }
+
+  const buscarTresDiasAnteriores = async () => {
+    try {
+      const resposta = await fetch("http://localhost:3000/apod-3")
+      const dados = await resposta.json()
+
+      return dados
+    } catch (err) {
+      console.error("Erro ao buscar dias anteriores:", err)
+      return []
+    }
+  }
+
+  const salvarFotosDiaNoStorage = async (fotos) => {
+    try {
+      await AsyncStorage.setItem('@fotos_do_dia', JSON.stringify(fotos))
+      console.log('Fotos do dia salvas no storage!')
+    } catch (erro) {
+      console.error('Erro ao salvar fotos do dia:', erro)
+    }
+  }
+
+  const carregarFotosDiaDoStorage = async () => {
+    try {
+      const fotosJSON = await AsyncStorage.getItem('@fotos_do_dia')
+      if (fotosJSON) {
+        const fotosCarregadas = JSON.parse(fotosJSON)
+        setFotosDia(fotosCarregadas)
+        console.log('Fotos do dia carregadas do storage!')
+        return true
+      }
+      return false
+    } catch (erro) {
+      console.error('Erro ao carregar fotos do dia:', erro)
+      return false
+    }
+  }
+
+
+  useEffect(() => {
+    const carregar = async () => {
+      const carregouDoStorage = await carregarFotosDiaDoStorage()
+      if (!carregouDoStorage) {
+
+        const todasFotos = []
+
+        const fotoHoje = await buscarFotoDoDia()
+        if (fotoHoje) todasFotos.push(fotoHoje)
+
+        const anteriores = await buscarTresDiasAnteriores()
+        todasFotos.push(...anteriores)
+
+        setFotosDia(todasFotos)
+        await salvarFotosDiaNoStorage(todasFotos)
+      }
     }
 
-    const novaFoto = {
-      url: dados.url,
-      title: dados.title,
-      date: dados.date,
-      explanation: dados.explanation
-    }
+    carregar()
+  }, [])
 
-    setFotosDia(prev => [...prev, novaFoto])
-    return true
-  } catch (err) {
-    console.error('Erro ao buscar foto do dia:', err)
-    alert('Erro ao buscar foto do dia')
-  }
-}
-
-const buscarTresDiasAnteriores = async () => {
-  try {
-    const resposta = await fetch(`http://localhost:3000/apod-3?date=${data}`)
-    const dados = await resposta.json()
-
-    
-    setFotosDia(prev => [...prev, ...dados])
-  } catch (err) {
-    console.error("Erro ao buscar dias anteriores:", err)
-  }
-}
-
-useEffect(() => {
-  const carregar = async () => {
-    setFotosDia([])
-    await buscarFotoDoDia()
-    await buscarTresDiasAnteriores()
-  }
-
-  carregar()
-}, [])
   return (
-  
+
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
 
         <View style={styles.fotoDia}>
           <Text style={styles.tituloDia}>Foto Astronômica do Dia</Text>
-  
           {fotosDia.length > 0 && (
-            <ScrollView 
-            horizontal
-            showsHorizontalScrollIndicator={false} 
-            contentContainerStyle={styles.secaoFotoDia}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.secaoFotoDia}>
               {fotosDia.map((foto, index) => (
                 <View key={`${foto.date}-${index}`} style={styles.cardFotoDia}>
                   <Image
                     source={{ uri: foto.url }}
                     style={styles.imagemFotoDia}
                   />
-                  <Text style={styles.dataFotoDia}>{foto.date}</Text>
+                  <Text style={styles.dataFotoDia}>{formatarDataBR(foto.date)}</Text>
                 </View>
               ))}
             </ScrollView>
@@ -169,7 +209,7 @@ useEffect(() => {
         <View style={styles.footer}>
           <View>
             <Text style={styles.tituloFooter}>Tripulantes</Text>
-            
+
             <View style={styles.tripulantes}>
               <Pressable onPress={abrirLinkedIn1}>
                 <FontAwesome5 name='user-astronaut' size={30} color='#FFFCFB' />
