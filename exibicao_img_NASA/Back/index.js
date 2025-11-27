@@ -68,19 +68,38 @@ app.get('/apod', async (req, res) => {
 
 
 app.get('/apod-3', async (req, res) => {
-    const nasa = axios.create({
-      baseURL: 'https://api.nasa.gov/planetary/'
-    })
+  const hoje = new Date()
+  const datas = []
 
-    const result = await nasa.get('/apod', {
-      params: {
-        api_key: process.env.NASA_KEY,
-        count: 3       
+  for (let i = 1; i <= 3; i++) {
+    const d = new Date(hoje)
+    d.setDate(hoje.getDate() - i)
+    datas.push(d.toISOString().split('T')[0])
+  }
+
+  try {
+    const resultados = []
+
+
+    for (const data of datas) {
+      const resp = await axios.get(
+        `https://api.nasa.gov/planetary/apod?api_key=${process.env.NASA_KEY}&date=${data}`
+      );
+
+      if (resp.data.media_type === "image") {
+        resultados.push({
+          url: resp.data.url,
+          date: resp.data.date
+        });
       }
-    });
+    }
 
-    res.json(result.data)
-  
+    res.json(resultados)
+
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({ erro: "Erro ao buscar dados" })
+  }
 })
 
 

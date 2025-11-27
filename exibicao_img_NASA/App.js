@@ -1,7 +1,7 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { FontAwesome6, FontAwesome5 } from '@expo/vector-icons';
-import { useState} from 'react';
-import { StyleSheet, Text, View, FlatList, Pressable, TextInput, Linking, Image } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { FontAwesome6, FontAwesome5 } from '@expo/vector-icons'
+import { useEffect, useState} from 'react'
+import { StyleSheet, Text, View, FlatList, Pressable, TextInput, Linking, Image, ScrollView } from 'react-native'
 
 export default function App() {
 
@@ -21,7 +21,6 @@ export default function App() {
     Linking.openURL('https://www.linkedin.com/in/caio-lima-da-cruz-338850337')
   }
 
-
   const buscar = async () => {
     if (busca === '') return
     const resposta = await fetch(`http://localhost:3000/search?termo=${busca}`)
@@ -39,102 +38,172 @@ export default function App() {
     setFotos(resultados)
   }
 
+  const buscarFotoDoDia = async () => {
+  try {
+    const resposta = await fetch('http://localhost:3000/apod')
+    const dados = await resposta.json()
+
+    if (dados.media_type !== "image") {
+      alert("A foto de hoje é um vídeo, não uma imagem.")
+      return;
+    }
+
+    const novaFoto = {
+      url: dados.url,
+      title: dados.title,
+      date: dados.date,
+      explanation: dados.explanation
+    }
+
+    setFotosDia(prev => [...prev, novaFoto])
+    return true
+  } catch (err) {
+    console.error('Erro ao buscar foto do dia:', err)
+    alert('Erro ao buscar foto do dia')
+  }
+}
+
+const buscarTresDiasAnteriores = async () => {
+  try {
+    const resposta = await fetch(`http://localhost:3000/apod-3?date=${data}`)
+    const dados = await resposta.json()
+
+    
+    setFotosDia(prev => [...prev, ...dados])
+  } catch (err) {
+    console.error("Erro ao buscar dias anteriores:", err)
+  }
+}
+
+useEffect(() => {
+  const carregar = async () => {
+    setFotosDia([])
+    await buscarFotoDoDia()
+    await buscarTresDiasAnteriores()
+  }
+
+  carregar()
+}, [])
   return (
-    <View style={styles.container}>
-
-
-      <TextInput
-        style={styles.input}
-        value={busca}
-        onChangeText={setBusca}
-        placeholder='Digite o que deseja buscar (exemplos: moon, earth etc)'
-      />
-
-      <Pressable style={styles.botao} onPress={buscar}>
-        <Text style={{ color: '#11468F' }}>Ao infinito, e além...</Text>
-      </Pressable>
-
-      <View style={styles.containerAno}>
-        {['2020', '2021', '2022', '2023', '2024'].map((ano) => (
-          <Pressable
-            key={ano}
-            style={styles.botaoAno}
-            onPress={() => buscarAno(ano)}
-          >
-            <Text style={{ color: '#11468F' }}>{ano}</Text>
-          </Pressable>
-        ))}
-        <Pressable
-          style={styles.botaoAno}
-          onPress={() => buscarAno('2025')}
-        >
-          <Text style={{ color: '#11468F' }}>2025</Text>
-        </Pressable>
-      </View>
-
   
-      <FlatList
-        data={fotos}
-        style={{ marginTop: 20, width: "100%" }}
-        keyExtractor={(index) => index.toString()}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: 'space-evenly' }}
-        renderItem={({ item }) => {
-          const imagem = item.links ? item.links[0].href : null
+    <ScrollView style={styles.scrollView}>
+      <View style={styles.container}>
 
-          if (!imagem) return null
+        <View style={styles.fotoDia}>
+          <Text style={styles.tituloDia}>Foto Astronômica do Dia</Text>
+  
+          {fotosDia.length > 0 && (
+            <ScrollView 
+            horizontal
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.secaoFotoDia}>
+              {fotosDia.map((foto, index) => (
+                <View key={`${foto.date}-${index}`} style={styles.cardFotoDia}>
+                  <Image
+                    source={{ uri: foto.url }}
+                    style={styles.imagemFotoDia}
+                  />
+                  <Text style={styles.dataFotoDia}>{foto.date}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </View>
 
-          return (
-            <View style={styles.fotos}>
-              <Text style={styles.tituloFoto}>{item.data[0].title}</Text>
-              <Image
-                source={{ uri: imagem }}
-                style={{ width: 300, height: 300, borderRadius: 10 }}
-              />
-              {item.data[0].description && (
-                <Text style={styles.descricao}>{item.data[0].description}</Text>
-              )}
+        <TextInput
+          style={styles.input}
+          value={busca}
+          onChangeText={setBusca}
+          placeholder='Digite o que deseja buscar (exemplos: moon, earth etc)'
+        />
+
+        <Pressable style={styles.botao} onPress={buscar}>
+          <Text style={{ color: '#11468F' }}>Ao infinito, e além...</Text>
+        </Pressable>
+
+        <View style={styles.containerAno}>
+          {['2020', '2021', '2022', '2023', '2024'].map((ano) => (
+            <Pressable
+              key={ano}
+              style={styles.botaoAno}
+              onPress={() => buscarAno(ano)}
+            >
+              <Text style={{ color: '#11468F' }}>{ano}</Text>
+            </Pressable>
+          ))}
+          <Pressable
+            style={styles.botaoAno}
+            onPress={() => buscarAno('2025')}
+          >
+            <Text style={{ color: '#11468F' }}>2025</Text>
+          </Pressable>
+        </View>
+
+        <FlatList
+          data={fotos}
+          style={{ marginTop: 20, width: "100%" }}
+          keyExtractor={(item, index) => index.toString()}
+          numColumns={2}
+          columnWrapperStyle={{ justifyContent: 'space-evenly' }}
+          scrollEnabled={false}
+          renderItem={({ item }) => {
+            const imagem = item.links ? item.links[0].href : null
+
+            if (!imagem) return null
+
+            return (
+              <View style={styles.fotos}>
+                <Text style={styles.tituloFoto}>{item.data[0].title}</Text>
+                <Image
+                  source={{ uri: imagem }}
+                  style={{ width: 300, height: 300, borderRadius: 10 }}
+                />
+                {item.data[0].description && (
+                  <Text style={styles.descricao}>{item.data[0].description}</Text>
+                )}
+              </View>
+            );
+          }}
+        />
+
+        <View style={styles.footer}>
+          <View>
+            <Text style={styles.tituloFooter}>Tripulantes</Text>
+            
+            <View style={styles.tripulantes}>
+              <Pressable onPress={abrirLinkedIn1}>
+                <FontAwesome5 name='user-astronaut' size={30} color='#FFFCFB' />
+                <Text style={styles.nomeTripulante}>Alicia</Text>
+              </Pressable>
+
+              <Pressable onPress={abrirLinkedIn2}>
+                <MaterialCommunityIcons name="space-invaders" size={30} color="#FFFCFB" />
+                <Text style={styles.nomeTripulante}>Isabel</Text>
+              </Pressable>
+
+              <Pressable onPress={abrirLinkedIn3}>
+                <FontAwesome6 name="space-awesome" size={30} color="#FFFCFB" />
+                <Text style={styles.nomeTripulante}>Caio</Text>
+              </Pressable>
             </View>
-          );
-        }}
-      />
-
-      <View style={styles.footer}>
-        <View>
-          <Text style={styles.tituloFooter}>Tripulantes</Text>
-          
-          <View style={styles.tripulantes}>
-            <Pressable onPress={abrirLinkedIn1}>
-              <FontAwesome5 name='user-astronaut' size={30} color='#FFFCFB' />
-              <Text style={styles.nomeTripulante}>Alicia</Text>
-            </Pressable>
-
-            <Pressable onPress={abrirLinkedIn2}>
-              <MaterialCommunityIcons name="space-invaders" size={30} color="#FFFCFB" />
-              <Text style={styles.nomeTripulante}>Isabel</Text>
-            </Pressable>
-
-            <Pressable onPress={abrirLinkedIn3}>
-              <FontAwesome6 name="space-awesome" size={30} color="#FFFCFB" />
-              <Text style={styles.nomeTripulante}>Caio</Text>
-            </Pressable>
           </View>
         </View>
+
       </View>
-    </View>
+    </ScrollView>
   )
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#11468F',
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#11468F',
     alignItems: 'center',
-  },
-
-  list: {
-    width: '70%',
-    marginTop: 12,
   },
 
   input: {
@@ -152,6 +221,8 @@ const styles = StyleSheet.create({
 
   containerAno: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
 
   botao: {
@@ -178,15 +249,15 @@ const styles = StyleSheet.create({
 
   footer: {
     width: '100%',
-    padding: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     backgroundColor: '#11468F',
     borderTopWidth: 2,
     borderColor: '#EB455F',
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 20,
-    position: 'absolute',
-    bottom: 0,
+    gap: 10,
+    marginTop: 30,
   },
 
   fotos: {
@@ -194,9 +265,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: 'center',
     padding: 10,
-    alignItems: 'center'
   },
-
 
   tituloFoto: {
     color: "#FFFCFB",
@@ -216,7 +285,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 
-
   tituloFooter: {
     color: '#FFFCFB',
     fontSize: 24,
@@ -230,14 +298,61 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 30,
-    
   },
-
 
   nomeTripulante: {
     color: '#FFFCFB',
     fontSize: 14,
     fontWeight: '500',
+  },
+
+  fotoDia: {
+    width: '90%',
+    marginTop: 40,
+    marginBottom: 20,
+    padding: 20,
+    backgroundColor: 'rgba(255, 252, 251, 0.1)',
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#EB455F',
+    alignItems: 'center',
+  },
+
+  tituloDia: {
+    color: '#FFFCFB',
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+
+
+  secaoFotoDia: {
+    width: '100%',
+    marginTop: 10,
+  },
+
+  cardFotoDia: {
+    backgroundColor: 'rgba(255, 252, 251, 0.95)',
+    borderRadius: 12,
+    padding: 12,
+    width: 180,
+    marginRight: 12,
+    alignItems: 'center',
+  },
+
+  imagemFotoDia: {
+    width: 150,
+    height: 150,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+
+  dataFotoDia: {
+    color: '#EB455F',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
   },
 
 });
