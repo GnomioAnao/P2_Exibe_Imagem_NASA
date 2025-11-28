@@ -34,7 +34,7 @@ export default function App() {
     const resposta = await fetch(`http://localhost:3000/search-year?ano=${ano}`)
     const dados = await resposta.json()
 
-    const limitados = dados.items.filter((_, l) => l <limiteResultados)
+    const limitados = dados.items.filter((_, l) => l < limiteResultados)
     
     setFotos(limitados)
   }
