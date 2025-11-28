@@ -6,24 +6,22 @@ require("dotenv").config()
 const app = express()
 app.use(cors())
 
-app.get('/search', async (req, res) => {
-    const termo = req.query.termo
-
-    if (!termo) {
-        return res.status(400).json({ erro: "O parâmetro 'termo' é obrigatório" })
-    }
-
     const nasa = axios.create({
         baseURL: 'https://images-api.nasa.gov/'
     })
 
+app.get('/search', async (req, res) => {
+    const termo = req.query.termo
+
+    if (!termo) {
+        return res.json({ erro: "O parâmetro 'termo' é obrigatório" })
+    }
     const result = await nasa.get('/search', {
         params: {
             q: termo,
             media_type: 'image',
         }
     })
-
     res.json({ items: result.data.collection.items })
 })
 
@@ -34,11 +32,6 @@ app.get('/search-year', async (req, res) => {
     if (!ano) {
         return res.status(400).json({ erro: "O parâmetro 'ano' é obrigatório" })
     }
-
-    const nasa = axios.create({
-        baseURL: 'https://images-api.nasa.gov/'
-    })
-
     const result = await nasa.get('/search', {
         params: {
             year_start: ano,
@@ -49,8 +42,6 @@ app.get('/search-year', async (req, res) => {
 
     res.json({ items: result.data.collection.items })
 })
-
-
 
 app.get('/apod', async (req, res) => {
     const nasa = axios.create({
@@ -106,4 +97,3 @@ app.get('/apod-3', async (req, res) => {
 
 const port = 3000
 app.listen(port, () => {console.log(`Back. Porta ${port}`)})
-
