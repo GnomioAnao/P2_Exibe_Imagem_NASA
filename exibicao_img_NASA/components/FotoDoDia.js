@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   dataFotoDia: {
-    color: '#EB455F',
+    color: '#11468f',
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
